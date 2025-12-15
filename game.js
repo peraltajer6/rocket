@@ -38,7 +38,6 @@ const PATHS = {
 
 let IMG = {};
 
-/* ---------- preload ---------- */
 async function preloadAll() {
   menuMsg.textContent = "Loading...";
   try {
@@ -64,16 +63,20 @@ let gameOver = false;
 let startedLoop = false;
 
 let score = 0;
-let bgY = 0;
 let countdownStart = 0;
 
+// 🚀 ROCKET (WORLD POSITION)
 const rocket = {
-  x: canvas.width / 2,
-  y: canvas.height * 0.7,
+  x: 0,
+  y: 0,
   angle: -Math.PI / 2,
-  speed: 3.2,        // slowed
-  turnSpeed: 0.055   // snappy but controlled
+  speed: 3.2,
+  turnSpeed: 0.055
 };
+
+// 🎥 CAMERA
+let cameraX = 0;
+let cameraY = 0;
 
 let asteroids = [];
 let projectiles = [];
@@ -131,8 +134,8 @@ function resetGame() {
   score = 0;
   gameOver = false;
 
-  rocket.x = canvas.width / 2;
-  rocket.y = canvas.height * 0.7;
+  rocket.x = 0;
+  rocket.y = 0;
   rocket.angle = -Math.PI / 2;
 
   lastAst = performance.now();
@@ -142,8 +145,8 @@ function resetGame() {
 /* ---------- spawns ---------- */
 function spawnAsteroid() {
   asteroids.push({
-    x: Math.random() * canvas.width,
-    y: -160,
+    x: rocket.x + (Math.random() * canvas.width - canvas.width / 2),
+    y: rocket.y - canvas.height,
     size: 55 * SCALE,
     speed: 2.5,
     img: Math.random() < 0.5 ? IMG.ast1 : IMG.ast2,
@@ -153,8 +156,8 @@ function spawnAsteroid() {
 
 function spawnCluster() {
   asteroids.push({
-    x: Math.random() * canvas.width,
-    y: -220,
+    x: rocket.x + (Math.random() * canvas.width - canvas.width / 2),
+    y: rocket.y - canvas.height * 1.2,
     size: 130 * SCALE,
     speed: 1.6,
     img: Math.random() < 0.5 ? IMG.c1 : IMG.c2,
@@ -191,14 +194,24 @@ function loop(now) {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  bgY += 2;
-  if (bgY >= canvas.height) bgY = 0;
-  safeDraw(IMG.bg, 0, bgY - canvas.height, canvas.width, canvas.height);
-  safeDraw(IMG.bg, 0, bgY, canvas.width, canvas.height);
+  // 🎥 CAMERA FOLLOW
+  cameraX = rocket.x - canvas.width / 2;
+  cameraY = rocket.y - canvas.height / 2;
+
+  // Background (infinite)
+  const bgOffsetY = (rocket.y * 0.5) % canvas.height;
+  safeDraw(IMG.bg, -cameraX, -cameraY - bgOffsetY, canvas.width, canvas.height);
+  safeDraw(IMG.bg, -cameraX, -cameraY - bgOffsetY + canvas.height, canvas.width, canvas.height);
 
   if (inCountdown) {
     if (now - countdownStart < 3000) {
-      safeDraw(IMG.bo, canvas.width / 2 - 150, canvas.height / 2 - 75, 300, 150);
+      safeDraw(
+        IMG.bo,
+        canvas.width / 2 - 150,
+        canvas.height / 2 - 75,
+        300,
+        150
+      );
     } else {
       inCountdown = false;
     }
@@ -206,9 +219,9 @@ function loop(now) {
     update(now);
   }
 
-  drawRocket();
   drawAsteroids();
   drawProjectiles();
+  drawRocket();
   drawRocketExplosions();
   drawScore();
 
@@ -222,11 +235,6 @@ function update(now) {
 
   rocket.x += Math.cos(rocket.angle) * rocket.speed;
   rocket.y += Math.sin(rocket.angle) * rocket.speed;
-
-  // keep rocket visible
-  if (rocket.x < 0) rocket.x = canvas.width;
-  if (rocket.x > canvas.width) rocket.x = 0;
-  rocket.y = Math.max(80, Math.min(canvas.height - 120, rocket.y));
 
   if (now - lastAst > 850) {
     spawnAsteroid();
@@ -262,15 +270,12 @@ function update(now) {
       break;
     }
   }
-
-  asteroids = asteroids.filter(a => a.y < canvas.height + 300);
-  projectiles = projectiles.filter(p => p.y > -100 && p.y < canvas.height + 100);
 }
 
 /* ---------- draw ---------- */
 function drawRocket() {
   ctx.save();
-  ctx.translate(rocket.x, rocket.y);
+  ctx.translate(canvas.width / 2, canvas.height / 2);
   ctx.rotate(rocket.angle + Math.PI / 2);
   safeDraw(IMG.rocket, -40, -40, 80, 80);
   ctx.restore();
@@ -278,13 +283,25 @@ function drawRocket() {
 
 function drawAsteroids() {
   asteroids.forEach(a =>
-    safeDraw(a.img, a.x - a.size / 2, a.y - a.size / 2, a.size, a.size)
+    safeDraw(
+      a.img,
+      a.x - cameraX - a.size / 2,
+      a.y - cameraY - a.size / 2,
+      a.size,
+      a.size
+    )
   );
 }
 
 function drawProjectiles() {
   projectiles.forEach(p =>
-    safeDraw(IMG.projectile, p.x - 6, p.y - 12, 12, 24)
+    safeDraw(
+      IMG.projectile,
+      p.x - cameraX - 6,
+      p.y - cameraY - 12,
+      12,
+      24
+    )
   );
 }
 
@@ -292,7 +309,13 @@ function drawRocketExplosions() {
   for (let i = rocketExplosions.length - 1; i >= 0; i--) {
     const e = rocketExplosions[i];
     ctx.globalAlpha = 1 - e.f / 20;
-    safeDraw(IMG.exploded, e.x - 60, e.y - 60, 120, 120);
+    safeDraw(
+      IMG.exploded,
+      canvas.width / 2 - 60,
+      canvas.height / 2 - 60,
+      120,
+      120
+    );
     ctx.globalAlpha = 1;
     e.f++;
     if (e.f > 20) rocketExplosions.splice(i, 1);
