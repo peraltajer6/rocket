@@ -4,7 +4,7 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// Images (lowercase)
+// Images
 const bg = new Image();
 bg.src = "assets/gbg.png";
 
@@ -23,7 +23,7 @@ const astImgs = ["assets/ast1.png", "assets/ast2.png"].map(src => {
   return i;
 });
 
-// Game state
+// State
 let running = false;
 let gameOver = false;
 let score = 0;
@@ -35,7 +35,7 @@ let bgY = 0;
 const rocket = {
   x: canvas.width / 2,
   y: canvas.height * 0.75,
-  speed: 6
+  speed: 7
 };
 
 // Objects
@@ -48,41 +48,44 @@ const keys = {};
 window.addEventListener("keydown", e => {
   keys[e.key] = true;
 
-  if (e.key === "ArrowUp" && !gameOver) shoot();
+  if (e.key === "ArrowUp" && running && !gameOver) shoot();
   if (gameOver && e.key.toLowerCase() === "r") reset();
 });
 window.addEventListener("keyup", e => keys[e.key] = false);
 
-// Menu
+// ▶️ PLAY BUTTON FIX
 document.getElementById("playBtn").onclick = () => {
   document.getElementById("menu").style.display = "none";
+  reset();
   running = true;
   loop();
 };
 
-// Spawn asteroid clusters
-function spawnAsteroids() {
-  for (let i = 0; i < 3; i++) {
+// Spawn asteroid clusters (RANDOM)
+function spawnAsteroidCluster() {
+  const count = 2 + Math.floor(Math.random() * 3);
+
+  for (let i = 0; i < count; i++) {
     asteroids.push({
       x: Math.random() * canvas.width,
-      y: -100 - Math.random() * 300,
-      size: 60,
-      speed: 3,
+      y: -100 - Math.random() * 200,
+      size: 50 + Math.random() * 30,
+      speed: 3 + Math.random() * 2,
       img: astImgs[Math.floor(Math.random() * astImgs.length)]
     });
   }
 }
 
-// Shoot projectile
+// Shooting
 function shoot() {
   projectiles.push({
     x: rocket.x,
     y: rocket.y - 40,
-    speed: 10
+    speed: 12
   });
 }
 
-// Explosion animation
+// Explosion
 function spawnExplosion(x, y) {
   explosions.push({ x, y, frame: 0 });
 }
@@ -124,14 +127,15 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-// Update game logic
+// Game logic
 function update() {
   if (keys["ArrowLeft"]) rocket.x -= rocket.speed;
   if (keys["ArrowRight"]) rocket.x += rocket.speed;
 
   rocket.x = Math.max(40, Math.min(canvas.width - 40, rocket.x));
 
-  if (asteroids.length < 9) spawnAsteroids();
+  // Spawn randomly
+  if (Math.random() < 0.03) spawnAsteroidCluster();
 
   asteroids.forEach(a => a.y += a.speed);
   projectiles.forEach(p => p.y -= p.speed);
@@ -146,17 +150,18 @@ function update() {
       }
     });
 
+    // 🚀 ROCKET EXPLOSION FIX
     if (Math.hypot(a.x - rocket.x, a.y - rocket.y) < a.size / 2) {
       spawnExplosion(rocket.x, rocket.y);
       endGame();
     }
   });
 
-  asteroids = asteroids.filter(a => a.y < canvas.height + 100);
+  asteroids = asteroids.filter(a => a.y < canvas.height + 200);
   projectiles = projectiles.filter(p => p.y > -50);
 }
 
-// Draw functions
+// Draws
 function drawRocket() {
   if (rocketImg.complete) {
     ctx.drawImage(rocketImg, rocket.x - 40, rocket.y - 40, 80, 80);
@@ -179,7 +184,6 @@ function drawProjectiles() {
   });
 }
 
-// Explosion animation frames
 function drawExplosions() {
   explosions.forEach((e, i) => {
     ctx.globalAlpha = 1 - e.frame / 20;
@@ -193,7 +197,6 @@ function drawExplosions() {
   });
 }
 
-// Score
 function drawScore() {
   ctx.fillStyle = "white";
   ctx.font = "24px Arial";
