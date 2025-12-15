@@ -6,7 +6,7 @@ html, body {
 }
 
 canvas {
-  display: none;            /* 🔥 KEY FIX */
+  display: none;          /* shown only after Play */
   position: absolute;
   top: 0;
   left: 0;
@@ -15,8 +15,10 @@ canvas {
 #menu {
   position: fixed;
   inset: 0;
-  background: url("assets/mbg.png") center/cover no-repeat;
+  background: url("assets/mbg.png") center / cover no-repeat;
   display: flex;
+  flex-direction: column;
+  gap: 14px;
   align-items: center;
   justify-content: center;
   z-index: 10;
@@ -26,6 +28,13 @@ canvas {
   width: 260px;
   cursor: pointer;
   image-rendering: pixelated;
+}
+
+#menuMsg {
+  color: white;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  opacity: 0.9;
 }
 
 #gameOver {
