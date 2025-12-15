@@ -1,0 +1,42 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: black;
+  font-family: Arial, sans-serif;
+}
+
+canvas {
+  display: block;
+}
+
+/* MENU */
+#menu {
+  position: fixed;
+  inset: 0;
+  background: url("assets/mbg.PNG") center/cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#playBtn {
+  font-size: 32px;
+  padding: 20px 50px;
+  cursor: pointer;
+}
+
+/* GAME OVER */
+#gameOver {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+#gameOver img {
+  width: 300px;
+}
