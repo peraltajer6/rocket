@@ -6,7 +6,7 @@ html, body {
 }
 
 canvas {
-  display: none;          /* shown only after Play */
+  display: none;
   position: absolute;
   top: 0;
   left: 0;
