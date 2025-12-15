@@ -7,9 +7,11 @@ html, body {
 
 canvas {
   display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
-/* MENU */
 #menu {
   position: fixed;
   inset: 0;
@@ -17,19 +19,15 @@ canvas {
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 10;
 }
 
 #playBtn {
-  width: 240px;
+  width: 260px;
   cursor: pointer;
-  transition: transform 0.15s ease;
+  image-rendering: pixelated;
 }
 
-#playBtn:hover {
-  transform: scale(1.08);
-}
-
-/* GAME OVER */
 #gameOver {
   position: fixed;
   inset: 0;
@@ -39,4 +37,5 @@ canvas {
   align-items: center;
   justify-content: center;
   color: white;
+  z-index: 10;
 }
