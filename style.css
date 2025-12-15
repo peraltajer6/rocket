@@ -20,7 +20,7 @@ canvas {
 }
 
 #playBtn {
-  width: 220px;
+  width: 240px;
   cursor: pointer;
   transition: transform 0.15s ease;
 }
