@@ -38,6 +38,7 @@ const PATHS = {
 
 let IMG = {};
 
+/* ---------- preload ---------- */
 async function preloadAll() {
   menuMsg.textContent = "Loading...";
   try {
@@ -65,7 +66,7 @@ let startedLoop = false;
 let score = 0;
 let countdownStart = 0;
 
-// 🚀 ROCKET (WORLD POSITION)
+// 🚀 rocket world position
 const rocket = {
   x: 0,
   y: 0,
@@ -74,7 +75,7 @@ const rocket = {
   turnSpeed: 0.055
 };
 
-// 🎥 CAMERA
+// 🎥 camera
 let cameraX = 0;
 let cameraY = 0;
 
@@ -90,13 +91,8 @@ const keys = {};
 addEventListener("keydown", e => {
   keys[e.key] = true;
 
-  if (e.key === "ArrowUp" && running && !inCountdown && !gameOver) {
-    shoot();
-  }
-
-  if (gameOver && e.key.toLowerCase() === "r") {
-    restartWithCountdown();
-  }
+  if (e.key === "ArrowUp" && running && !inCountdown && !gameOver) shoot();
+  if (gameOver && e.key.toLowerCase() === "r") restartWithCountdown();
 });
 addEventListener("keyup", e => (keys[e.key] = false));
 
@@ -157,7 +153,7 @@ function spawnAsteroid() {
 function spawnCluster() {
   asteroids.push({
     x: rocket.x + (Math.random() * canvas.width - canvas.width / 2),
-    y: rocket.y - canvas.height * 1.2,
+    y: rocket.y - canvas.height * 1.3,
     size: 130 * SCALE,
     speed: 1.6,
     img: Math.random() < 0.5 ? IMG.c1 : IMG.c2,
@@ -188,20 +184,39 @@ function endGame() {
   gameOverUI.style.display = "flex";
 }
 
+/* ---------- infinite background ---------- */
+function drawInfiniteBackground() {
+  const bgW = IMG.bg.width;
+  const bgH = IMG.bg.height;
+
+  const startX = Math.floor(cameraX / bgW) * bgW;
+  const startY = Math.floor(cameraY / bgH) * bgH;
+
+  for (let x = startX; x < cameraX + canvas.width; x += bgW) {
+    for (let y = startY; y < cameraY + canvas.height; y += bgH) {
+      safeDraw(
+        IMG.bg,
+        x - cameraX,
+        y - cameraY,
+        bgW,
+        bgH
+      );
+    }
+  }
+}
+
 /* ---------- loop ---------- */
 function loop(now) {
   if (!running) return;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // 🎥 CAMERA FOLLOW
+  // camera follow
   cameraX = rocket.x - canvas.width / 2;
   cameraY = rocket.y - canvas.height / 2;
 
-  // Background (infinite)
-  const bgOffsetY = (rocket.y * 0.5) % canvas.height;
-  safeDraw(IMG.bg, -cameraX, -cameraY - bgOffsetY, canvas.width, canvas.height);
-  safeDraw(IMG.bg, -cameraX, -cameraY - bgOffsetY + canvas.height, canvas.width, canvas.height);
+  // ✅ infinite tiled background
+  drawInfiniteBackground();
 
   if (inCountdown) {
     if (now - countdownStart < 3000) {
@@ -270,6 +285,12 @@ function update(now) {
       break;
     }
   }
+
+  asteroids = asteroids.filter(a => a.y < rocket.y + canvas.height * 2);
+  projectiles = projectiles.filter(
+    p => Math.abs(p.x - rocket.x) < canvas.width &&
+         Math.abs(p.y - rocket.y) < canvas.height
+  );
 }
 
 /* ---------- draw ---------- */
