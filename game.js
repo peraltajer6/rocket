@@ -4,26 +4,26 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// Images
+// Images (lowercase)
 const bg = new Image();
-bg.src = "assets/gbg.PNG";
+bg.src = "assets/gbg.png";
 
 const rocketImg = new Image();
-rocketImg.src = "assets/rocket.PNG";
+rocketImg.src = "assets/rocket.png";
 
 const projectileImg = new Image();
-projectileImg.src = "assets/projectile.PNG";
+projectileImg.src = "assets/projectile.png";
 
 const explosionImg = new Image();
-explosionImg.src = "assets/exploded.PNG";
+explosionImg.src = "assets/exploded.png";
 
-const astImgs = ["assets/ast1.PNG", "assets/ast2.PNG"].map(src => {
+const astImgs = ["assets/ast1.png", "assets/ast2.png"].map(src => {
   const i = new Image();
   i.src = src;
   return i;
 });
 
-// State
+// Game state
 let running = false;
 let gameOver = false;
 let score = 0;
@@ -34,11 +34,11 @@ let bgY = 0;
 // Rocket
 const rocket = {
   x: canvas.width / 2,
-  y: canvas.height * 0.7,
+  y: canvas.height * 0.75,
   speed: 6
 };
 
-// Arrays
+// Objects
 let asteroids = [];
 let projectiles = [];
 let explosions = [];
@@ -48,10 +48,7 @@ const keys = {};
 window.addEventListener("keydown", e => {
   keys[e.key] = true;
 
-  // Shoot
   if (e.key === "ArrowUp" && !gameOver) shoot();
-
-  // Restart
   if (gameOver && e.key.toLowerCase() === "r") reset();
 });
 window.addEventListener("keyup", e => keys[e.key] = false);
@@ -63,7 +60,7 @@ document.getElementById("playBtn").onclick = () => {
   loop();
 };
 
-// Spawn asteroid cluster
+// Spawn asteroid clusters
 function spawnAsteroids() {
   for (let i = 0; i < 3; i++) {
     asteroids.push({
@@ -87,14 +84,10 @@ function shoot() {
 
 // Explosion animation
 function spawnExplosion(x, y) {
-  explosions.push({
-    x,
-    y,
-    frame: 0
-  });
+  explosions.push({ x, y, frame: 0 });
 }
 
-// Reset
+// Reset game
 function reset() {
   asteroids = [];
   projectiles = [];
@@ -111,11 +104,14 @@ function loop() {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Background
+  // Infinite background
   bgY += 2;
   if (bgY >= canvas.height) bgY = 0;
-  ctx.drawImage(bg, 0, bgY - canvas.height, canvas.width, canvas.height);
-  ctx.drawImage(bg, 0, bgY, canvas.width, canvas.height);
+
+  if (bg.complete) {
+    ctx.drawImage(bg, 0, bgY - canvas.height, canvas.width, canvas.height);
+    ctx.drawImage(bg, 0, bgY, canvas.width, canvas.height);
+  }
 
   if (!gameOver) update();
 
@@ -128,23 +124,18 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
+// Update game logic
 function update() {
-  // Side movement only
   if (keys["ArrowLeft"]) rocket.x -= rocket.speed;
   if (keys["ArrowRight"]) rocket.x += rocket.speed;
 
   rocket.x = Math.max(40, Math.min(canvas.width - 40, rocket.x));
 
-  // Spawn asteroids
-  if (asteroids.length < 8) spawnAsteroids();
+  if (asteroids.length < 9) spawnAsteroids();
 
-  // Move asteroids
   asteroids.forEach(a => a.y += a.speed);
-
-  // Move projectiles
   projectiles.forEach(p => p.y -= p.speed);
 
-  // Collision: projectile vs asteroid
   asteroids.forEach((a, ai) => {
     projectiles.forEach((p, pi) => {
       if (Math.hypot(a.x - p.x, a.y - p.y) < a.size / 2) {
@@ -155,7 +146,6 @@ function update() {
       }
     });
 
-    // Rocket hit
     if (Math.hypot(a.x - rocket.x, a.y - rocket.y) < a.size / 2) {
       spawnExplosion(rocket.x, rocket.y);
       endGame();
@@ -166,27 +156,36 @@ function update() {
   projectiles = projectiles.filter(p => p.y > -50);
 }
 
+// Draw functions
 function drawRocket() {
-  ctx.drawImage(rocketImg, rocket.x - 40, rocket.y - 40, 80, 80);
+  if (rocketImg.complete) {
+    ctx.drawImage(rocketImg, rocket.x - 40, rocket.y - 40, 80, 80);
+  }
 }
 
 function drawAsteroids() {
   asteroids.forEach(a => {
-    ctx.drawImage(a.img, a.x - a.size/2, a.y - a.size/2, a.size, a.size);
+    if (a.img.complete) {
+      ctx.drawImage(a.img, a.x - a.size/2, a.y - a.size/2, a.size, a.size);
+    }
   });
 }
 
 function drawProjectiles() {
   projectiles.forEach(p => {
-    ctx.drawImage(projectileImg, p.x - 8, p.y - 16, 16, 32);
+    if (projectileImg.complete) {
+      ctx.drawImage(projectileImg, p.x - 8, p.y - 16, 16, 32);
+    }
   });
 }
 
-// Explosion animation
+// Explosion animation frames
 function drawExplosions() {
   explosions.forEach((e, i) => {
     ctx.globalAlpha = 1 - e.frame / 20;
-    ctx.drawImage(explosionImg, e.x - 50, e.y - 50, 100, 100);
+    if (explosionImg.complete) {
+      ctx.drawImage(explosionImg, e.x - 50, e.y - 50, 100, 100);
+    }
     ctx.globalAlpha = 1;
 
     e.frame++;
